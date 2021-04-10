@@ -57,7 +57,7 @@ var completeEditTask = function (taskName, taskType, taskId) {
   // loop through tasks array and task object with new content
   for (var i = 0; i < tasks.length; i++) {
     if (tasks[i].id === parseInt(taskId)) {
-      tasks[i].name = taskNamel;
+      tasks[i].name = taskName;
       tasks[i].type = taskType;
     }
   }
@@ -163,53 +163,17 @@ var taskButtonHandler = function (event) {
   }
 };
 
-var editTask = function (taskId) {
-  // get task list item element
-  var taskSelected = document.querySelector(
-    ".task-item[data-task-id='" + taskId + "']"
-  );
-
-  // getcontent from task name and type
-  var taskName = taskSelected.querySelector("h3.task-name").textContent;
-
-  var taskType = taskSelected.querySelector("span.task-type").textContent;
-  document.querySelector("input[name='task-name']").value = taskName;
-  document.querySelector("select[name='task-type']").value = taskType;
-  document.querySelector("#save-task").textContent = "Save Task";
-
-  formEl.setAttribute("data-task-id", taskId);
-};
-
-var deleteTask = function (taskId) {
-  var taskSelected = document.querySelector(
-    ".task-item[data-task-id='" + taskId + "']"
-  );
-  taskSelected.remove();
-
-  // create new array to hold updated list of tasks
-  var updatedTaskArr = [];
-
-  // loop through current tasks
-  for (var i = 0; i < taskId.length; i++) {
-    // if tasks[i].id doesn't match the value of taskId, let's keep that task and push it into the new array
-    if (tasks[i].id !== parseInt(taskId)) {
-      updatedTaskArr.push(tasks[i]);
-    }
-  }
-  saveTasks();
-};
-
 var taskStatusCHangeHandler = function (event) {
   // get the task item's id
   var taskId = event.target.getAttribute("data-task-id");
-
-  // get the currently selected option's value and convert to lowercase
-  var statusValue = event.target.value.toLowerCase();
 
   // find the parent task item element based on the id
   var taskSelected = document.querySelector(
     ".task-item[data-task-id='" + taskId + "']"
   );
+
+  // get the currently selected option's value and convert to lowercase
+  var statusValue = event.target.value.toLowerCase();
 
   if (statusValue === "to do") {
     tasksToDoEl.appendChild(taskSelected);
@@ -227,9 +191,80 @@ var taskStatusCHangeHandler = function (event) {
   saveTasks();
 };
 
+var editTask = function (taskId) {
+    console.log(taskId);
+
+  // get task list item element
+  var taskSelected = document.querySelector(
+    ".task-item[data-task-id='" + taskId + "']"
+  );
+
+  // getcontent from task name and type
+  var taskName = taskSelected.querySelector("h3.task-name").textContent;
+
+  var taskType = taskSelected.querySelector("span.task-type").textContent;
+  document.querySelector("input[name='task-name']").value = taskName;
+  document.querySelector("select[name='task-type']").value = taskType;
+
+  formEl.setAttribute("data-task-id", taskId);
+  formEl.querySelector("#save-task").textContent = "Save Task";
+};
+
+var deleteTask = function (taskId) {
+  console.log(taskId);
+
+  var taskSelected = document.querySelector(
+    ".task-item[data-task-id='" + taskId + "']"
+  );
+  taskSelected.remove();
+
+  // create new array to hold updated list of tasks
+  var updatedTaskArr = [];
+
+  // loop through current tasks
+  for (var i = 0; i < taskId.length; i++) {
+    // if tasks[i].id doesn't match the value of taskId, let's keep that task and push it into the new array
+    if (tasks[i].id !== parseInt(taskId)) {
+      updatedTaskArr.push(tasks[i]);
+    }
+  }
+  tasks = updatedTaskArr;
+  saveTasks();
+};
+
 var saveTasks = function () {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 };
 
+// Gets task items from localStorage.
+// Converts tasks from the string format back into an array of objects.
+// Iterates through a tasks array and creates task elements on the page from it.
+var loadTasks = function () {
+  var savedTasks = localStorage.getItem("tasks");
+  // if there are no tasks, set tasks to an empty array and return out of the function
+  if (!savedTasks) {
+    return false;
+  }
+  console.log("Saved tasks found!");
+  // else load up saved tasks
+
+  // parse into array of objects
+  savedTasks = JSON.parse(savedTasks);
+
+  // loop through savedTask array
+  for (var i = 0; i < savedTasks.length; i++) {
+    // pass each task object into the `createTaskEl()` function
+    createTaskEl(savedTasks[i]);
+  }
+};
+
+// Create a new task
+formEl.addEventListener("submit", taskFormHandler);
+
+// for edit and delete buttons
 pageContentEl.addEventListener("click", taskButtonHandler);
+
+// for changing the status
 pageContentEl.addEventListener("change", taskStatusCHangeHandler);
+
+loadTasks();
